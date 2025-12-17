@@ -1,0 +1,62 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+
+  setup:
+    name: Checkout & Setup
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+
+  static-analysis:
+    name: Static Code Analysis (Bandit)
+    runs-on: ubuntu-latest
+    needs: setup        # 👈 HERE (job waits for setup)
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Run Bandit
+        run: |
+          pip install bandit
+          bandit -r app
+
+
+  unit-tests:
+    name: Unit Tests & Coverage
+    runs-on: ubuntu-latest
+    needs: static-analysis   # 👈 HERE (job waits for Bandit)
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Run tests
+        run: |
+          pip install -r requirements.txt
+          pytest --cov=app
+

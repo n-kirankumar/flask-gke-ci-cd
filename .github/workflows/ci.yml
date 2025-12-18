@@ -139,9 +139,11 @@ jobs:
       id-token: write
       contents: read
 
+    env:
+      USE_GKE_GCLOUD_AUTH_PLUGIN: "True"
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Authenticate to GCP (WIF)
         uses: google-github-actions/auth@v2
@@ -151,6 +153,10 @@ jobs:
 
       - name: Set up gcloud
         uses: google-github-actions/setup-gcloud@v2
+
+      - name: Install GKE auth plugin
+        run: |
+          gcloud components install gke-gcloud-auth-plugin --quiet
 
       - name: Get GKE credentials
         run: |
@@ -164,7 +170,7 @@ jobs:
             flask-app=asia-south1-docker.pkg.dev/eng-archery-480704-i7/flask-repo/flask-app:${{ github.sha }} \
             -n flask-app
 
-      - name: Wait for rollout to complete
+      - name: Wait for rollout
         run: |
           kubectl rollout status deployment/flask-app -n flask-app
 
